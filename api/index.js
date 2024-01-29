@@ -1,15 +1,34 @@
-import Express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-const app = Express();
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 8000;
+
+// Configurar middleware para lidar com CORS
 app.use(cors());
 
-app.get('/api/hello', (req, res) => {
+// Conectar ao MongoDB
+mongoose
+  .connect(process.env.MONGO_DB)
+  .then(() => {
+    console.log("Conectado ao MongoDB");
+  })
+  .catch((err) => {
+    console.error("Erro ao conectar ao MongoDB: ", err.message);
+  });
+
+// Rota de exemplo
+app.get("/api/hello", (req, res) => {
   res.json({
-    message: 'Hello World',
+    message: "Hello World",
   });
 });
 
-app.listen(8000, () => {
-  console.log('Servidor rodando na porta 8000');
+// Iniciar o servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

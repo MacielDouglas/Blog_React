@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import userRoutes from "./routes/user.route.js";
 
 dotenv.config();
 
@@ -14,12 +15,8 @@ app.use(cors());
 // Conectar ao MongoDB
 mongoose
   .connect(process.env.MONGO_DB)
-  .then(() => {
-    console.log("Conectado ao MongoDB");
-  })
-  .catch((err) => {
-    console.error("Erro ao conectar ao MongoDB: ", err.message);
-  });
+  .then(() => console.log("Conectado ao MongoDB"))
+  .catch((err) => console.error("Erro ao conectar ao MongoDB:", err.message));
 
 // Rota de exemplo
 app.get("/api/hello", (req, res) => {
@@ -27,6 +24,9 @@ app.get("/api/hello", (req, res) => {
     message: "Hello World",
   });
 });
+
+// Roteamento de usuário
+app.use("/api/user", userRoutes);
 
 // Iniciar o servidor
 app.listen(PORT, () => {

@@ -10,28 +10,35 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Configurar middleware para lidar com CORS
+// Configurações
 app.use(cors());
-
-// Conectar ao MongoDB
-mongoose
-  .connect(process.env.MONGO_DB)
-  .then(() => console.log("Conectado ao MongoDB"))
-  .catch((err) => console.error("Erro ao conectar ao MongoDB:", err.message));
-
-// Rota de exemplo
-app.get("/api/hello", (req, res) => {
-  res.json({
-    message: "Hello World",
-  });
-});
-
 app.use(express.json());
-// Roteamento de usuário
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 
-// Iniciar o servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+// Middleware de tratamento de erros
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Erro interno do Servidor.";
+  res.status(statusCode).json({
+    success: true,
+    statusCode,
+    message,
+  });
 });
+
+// Inicialização
+const startServer = async () => {
+  console.log("Conectando ao Mongo...");
+  try {
+    await mongoose.connect(process.env.MONGO_DB);
+    console.log("Conectado ao MongoDB com sucesso!!!");
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`);
+    });
+  } catch (err) {
+    console.error("Erro ao conectar ao MongoDB:", err.message);
+  }
+};
+
+startServer();

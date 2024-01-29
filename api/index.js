@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.route.js";
+import authRoutes from "./routes/auth.route.js";
 
 dotenv.config();
 
@@ -25,8 +26,10 @@ app.get("/api/hello", (req, res) => {
   });
 });
 
+app.use(express.json());
 // Roteamento de usuário
 app.use("/api/user", userRoutes);
+app.use("/api/auth", authRoutes);
 
 // Iniciar o servidor
 app.listen(PORT, () => {

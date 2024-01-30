@@ -64,3 +64,50 @@ export const signin = async (req, res, next) => {
     next(error);
   }
 };
+
+export const google = async (req, res, next) => {
+  const { email, name, googlePhotoUrl } = req.body;
+
+  try {
+    // Verifica se o usuário já existe no banco de dados
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Se o usuário não existir, gera uma senha aleatória
+      const generatePassword =
+        Math.random().toString(36).slice(-8) +
+        Math.random().toString(36).slice(-8);
+
+      // Hash da senha gerada
+      const hashedPassword = bcryptjs.hashSync(generatePassword, 10);
+
+      // Cria um novo usuário com os dados do Google
+      user = new User({
+        username:
+          name.toLowerCase().split(" ").join("") +
+          Math.random().toString(9).slice(-4),
+        email,
+        password: hashedPassword,
+        profilePicture: googlePhotoUrl,
+      });
+
+      // Salva o novo usuário no banco de dados
+      await user.save();
+    }
+
+    // Gera um token de autenticação usando o ID do usuário
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+    // Remove a senha do usuário da resposta
+    const { password, ...rest } = user._doc;
+
+    // Define o token como cookie e envia os dados do usuário (exceto a senha)
+    res
+      .status(200)
+      .cookie("access_token", token, { httpOnly: true })
+      .json(rest);
+  } catch (error) {
+    // Trata erros, se houver
+    next(error);
+  }
+};

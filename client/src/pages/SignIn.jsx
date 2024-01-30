@@ -8,6 +8,7 @@ import {
   setSignInSuccess,
   setSignInFailure,
 } from "../redux/user/userSlice";
+import OAuth from "../components/OAuth";
 
 const FormField = ({ label, type, placeholder, id, onChange }) => (
   <div>
@@ -97,7 +98,7 @@ const SignIn = () => {
             to="/"
             className="font-bold self-center whitespace-nowrap dark:text-white text-4xl"
           >
-            <span className="px-2 py-1 bg-gradient-to-t from-orange-500 via-orange-500 to-rose-500 rounded-lg text-white">
+            <span className="px-3 mr-1 py-1 bg-gradient-to-t from-orange-500 via-orange-500 to-rose-500 rounded-lg text-white">
               Orange
             </span>
             Blog
@@ -125,6 +126,7 @@ const SignIn = () => {
               onChange={handleChange}
             />
             <SubmitButton loading={loading}>Entrar</SubmitButton>
+            <OAuth />
           </form>
           <div className="flex gap-2 text-sm mt-5">
             <span>Ainda não tem uma conta?</span>

@@ -1,11 +1,73 @@
-import { Button, Label, TextInput } from "flowbite-react";
-import { Link } from "react-router-dom";
+import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
+import { Link, useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
+import { useState } from "react";
+
+const FormField = ({ label, type, placeholder, id, onChange }) => (
+  <div>
+    <Label value={label} />
+    <TextInput
+      type={type}
+      placeholder={placeholder}
+      id={id}
+      onChange={onChange}
+    />
+  </div>
+);
+
+FormField.propTypes = {
+  label: PropTypes.string.isRequired,
+  type: PropTypes.string.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired, // Adiciona a validação para a propriedade onChange
+};
 
 export default function SignUp() {
+  const [formData, setFormData] = useState({});
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.username || !formData.email || !formData.password) {
+      return setErrorMessage("Por favor, preencha todos os campos.");
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+
+      if (data.success === false) {
+        return setErrorMessage(data.message);
+      }
+      setLoading(false);
+      if (res.ok) {
+        navigate("/sign-in");
+      }
+    } catch (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen mt-20">
-      <div className=" flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
-        {/* esquerda  */}
+      <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
+        {/* Restante do código... */}
+        {/* Esquerda */}
         <div className="flex-1">
           <Link
             to="/"
@@ -21,35 +83,57 @@ export default function SignUp() {
             e-mail e senha ou com o Google.
           </p>
         </div>
-        {/* direita */}
+        {/* Direita */}
         <div className="flex-1">
-          <form className="flex flex-col gap-4">
-            <div>
-              <Label value="Seu usuário" />
-              <TextInput type="text" placeholder="Usuário" id="username" />
-            </div>
-            <div className="">
-              <Label value="Seu email" />
-              <TextInput
-                type="text"
-                placeholder="alguem@email.com"
-                id="email"
-              />
-            </div>
-            <div className="">
-              <Label value="Sua senha" />
-              <TextInput type="text" placeholder="Senha" id="password" />
-            </div>
-            <Button gradientDuoTone="pinkToOrange" type="submit">
-              Inscreva-se
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <FormField
+              label="Seu usuário"
+              type="text"
+              placeholder="Usuário"
+              id="username"
+              onChange={handleChange}
+            />
+            <FormField
+              label="Seu email"
+              type="text"
+              placeholder="alguem@email.com"
+              id="email"
+              onChange={handleChange}
+            />
+            <FormField
+              label="Sua senha"
+              type="password"
+              placeholder="Senha"
+              id="password"
+              onChange={handleChange}
+            />
+            <Button
+              gradientDuoTone="pinkToOrange"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Spinner size="sm" />
+                  <span className="pl-3">Loading.....</span>
+                </>
+              ) : (
+                "Inscreva-se"
+              )}
             </Button>
           </form>
           <div className="flex gap-2 text-sm mt-5">
             <span>Já tem uma conta?</span>
             <Link to="/sign-in" className="text-blue-500">
+              {" "}
               Conecte-se
             </Link>
           </div>
+          {errorMessage && (
+            <Alert className="mt-5" color="failure">
+              {errorMessage}
+            </Alert>
+          )}
         </div>
       </div>
     </div>

@@ -19,15 +19,14 @@ export default function DashSidebar() {
       <Sidebar.Items>
         <Sidebar.ItemGroup>
           {/* Link para o perfil com a aba "profile" na URL */}
-          <Link to="/dashboard?tab=profile">
-            <Sidebar.Item
-              active={tab === "profile"}
-              icon={HiUser}
-              label="Perfil"
-              labelColor="dark"
-              as="div"
-            />
-          </Link>
+          <Sidebar.Item
+            active={tab === "profile"}
+            icon={HiUser}
+            label="Perfil"
+            labelColor="dark"
+            as="div"
+          />
+          <Link to="/dashboard?tab=profile">Perfil</Link>
 
           {/* Item de sair com ícone e classe de cursor */}
           <Sidebar.Item icon={HiArrowSmRight} className="cursor-pointer">

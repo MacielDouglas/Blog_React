@@ -10,14 +10,25 @@ import {
 import { app } from "./../firebase";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import {
+  updateStart,
+  updateSuccess,
+  updateFailure,
+} from "../redux/user/userSlice";
+import { useDispatch } from "react-redux";
 
 export default function DashProfile() {
   const { currentUser } = useSelector((state) => state.user); // Extrai o usuário atual do estado global usando o seletor Redux
   const [imageFile, setImageFile] = useState(null); // Estado para armazenar o arquivo de imagem selecionado
   const [imageFileUrl, setImageFileUrl] = useState(null); // Estado para armazenar a URL da imagem
-  const [imageFileUploadProgress, setImageFileUploadProgress] = useState(0); // Estado para acompanhar o progresso do upload da imagem
+  const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null); // Estado para acompanhar o progresso do upload da imagem
   const [imageFileUploadError, setImageFileUploadError] = useState(null); // Estado para armazenar mensagens de erro de upload
+  const [imageFileUploading, setImageFileUploading] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [updateUserSuccess, setUpdateUserSuccess] = useState(null);
+  const [updateUserError, setUpdateUserError] = useState(null);
   const filePickerRef = useRef(); // Referência para o elemento de entrada de arquivo no DOM
+  const dispatch = useDispatch();
 
   // Manipulador de evento para alterar a imagem selecionada
   const handleImageChange = (e) => {
@@ -37,6 +48,8 @@ export default function DashProfile() {
 
   // Função para upload da imagem para o Firebase Storage
   const uploadImage = async () => {
+    setImageFileUploading(true);
+    setImageFileUploadError(null);
     const storage = getStorage(app); // Obtém a instância de armazenamento do Firebase
     const fileName = new Date().getTime() + imageFile.name; // Gera um nome de arquivo único
     const storageRef = ref(storage, fileName); // Cria uma referência de armazenamento para o arquivo
@@ -55,25 +68,72 @@ export default function DashProfile() {
         setImageFileUploadError(
           "Não foi possível fazer upload da imagem (o arquivo deve ter menos de 2 MB)"
         );
-        setImageFileUploadProgress(0); // Reinicia o progresso do upload para 0
+        setImageFileUploadProgress(null); // Reinicia o progresso do upload para 0
         setImageFile(null); // Limpa o arquivo de imagem selecionado
         setImageFileUrl(null); // Limpa a URL da imagem
+        setImageFileUploading(false);
       },
       () => {
         // Upload concluído com sucesso
         getDownloadURL(uploadTask.snapshot.ref).then((downloadUrl) => {
           setImageFileUrl(downloadUrl); // Define a URL da imagem após o upload
           setImageFileUploadProgress(100); // Define o progresso do upload como 100 ao concluir
+          setFormData({ ...formData, profilePicture: downloadUrl });
+          setImageFileUploading(false);
         });
       }
     );
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setUpdateUserError(null);
+    setUpdateUserSuccess(null);
+
+    if (Object.keys(formData).length === 0) {
+      setUpdateUserError("Nenhuma alteração foi feita");
+      return;
+    }
+    if (imageFileUploading) {
+      setUpdateUserError("Aguarde o upload da imagem");
+      return;
+    }
+    try {
+      dispatch(updateStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        dispatch(updateFailure(data.message));
+        setUpdateUserError(data.message);
+      } else {
+        dispatch(updateSuccess(data));
+        setUpdateUserSuccess("Perfil do usuário atualizado com sucesso");
+      }
+    } catch (error) {
+      dispatch(updateFailure(error.message));
+      setUpdateUserError(error.message);
+    }
+    console.log("submetido");
   };
 
   // Renderização do componente
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7 text-center font-semibold text-3xl">Perfil</h1>
-      <form className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* Input de arquivo para selecionar uma nova imagem de perfil */}
         <input
           type="file"
@@ -130,14 +190,21 @@ export default function DashProfile() {
           id="username"
           placeholder="usuário"
           defaultValue={currentUser.username}
+          onChange={handleChange}
         />
         <TextInput
           type="email"
           id="email"
           placeholder="email"
           defaultValue={currentUser.email}
+          onChange={handleChange}
         />
-        <TextInput type="password" id="password" placeholder="senha" />
+        <TextInput
+          type="password"
+          id="password"
+          placeholder="senha"
+          onChange={handleChange}
+        />
         {/* Botão para enviar o formulário de edição do perfil */}
         <Button type="submit" color="dark" outline>
           Alterar
@@ -148,6 +215,16 @@ export default function DashProfile() {
         <span className="cursor-pointer">Deletar Conta</span>
         <span className="cursor-pointer">Sair</span>
       </div>
+      {updateUserSuccess && (
+        <Alert color="success" className="mt-5">
+          {updateUserSuccess}
+        </Alert>
+      )}
+      {updateUserError && (
+        <Alert color="failure" className="mt-5">
+          {updateUserError}
+        </Alert>
+      )}
     </div>
   );
 }

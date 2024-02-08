@@ -1,5 +1,5 @@
-import { Alert, Button, TextInput } from "flowbite-react";
-import { useEffect, useRef, useState } from "react"; // Importa Hooks do React
+import { Alert, Button, Modal, TextInput } from "flowbite-react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   getDownloadURL,
@@ -14,90 +14,109 @@ import {
   updateStart,
   updateSuccess,
   updateFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  deleteUserFailure,
 } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
 
 export default function DashProfile() {
-  const { currentUser } = useSelector((state) => state.user); // Extrai o usuário atual do estado global usando o seletor Redux
-  const [imageFile, setImageFile] = useState(null); // Estado para armazenar o arquivo de imagem selecionado
-  const [imageFileUrl, setImageFileUrl] = useState(null); // Estado para armazenar a URL da imagem
-  const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null); // Estado para acompanhar o progresso do upload da imagem
-  const [imageFileUploadError, setImageFileUploadError] = useState(null); // Estado para armazenar mensagens de erro de upload
+  // Seleciona os dados do usuário e erros do estado global Redux
+  const { currentUser, error } = useSelector((state) => state.user);
+
+  // Estados para armazenar dados do formulário e estados de upload de imagem
+  const [formState, setFormState] = useState({
+    username: currentUser.username,
+    email: currentUser.email,
+    password: "",
+  });
+  const [imageFile, setImageFile] = useState(null);
+  const [imageFileUrl, setImageFileUrl] = useState(null);
+  const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
+  const [imageFileUploadError, setImageFileUploadError] = useState(null);
   const [imageFileUploading, setImageFileUploading] = useState(false);
-  const [formData, setFormData] = useState({});
+
+  // Estados para mensagens de sucesso e erro durante a atualização do usuário e modal
   const [updateUserSuccess, setUpdateUserSuccess] = useState(null);
   const [updateUserError, setUpdateUserError] = useState(null);
-  const filePickerRef = useRef(); // Referência para o elemento de entrada de arquivo no DOM
+  const [showModal, setShowModal] = useState(false);
+
+  // Referência para o elemento de entrada de arquivo no DOM
+  const filePickerRef = useRef();
+
+  // Dispatcher Redux para despachar ações de atualização e exclusão do usuário
   const dispatch = useDispatch();
+
+  // Efeito para iniciar o upload da imagem quando um arquivo é selecionado
+  useEffect(() => {
+    if (imageFile) {
+      uploadImage();
+    }
+  }, [imageFile]);
 
   // Manipulador de evento para alterar a imagem selecionada
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setImageFileUrl(URL.createObjectURL(file)); // Cria uma URL para visualização da imagem
+      setImageFileUrl(URL.createObjectURL(file));
     }
   };
-
-  // Efeito colateral para iniciar o upload da imagem quando um arquivo é selecionado
-  useEffect(() => {
-    if (imageFile) {
-      uploadImage(); // Inicia o processo de upload da imagem
-    }
-  }, [imageFile]);
 
   // Função para upload da imagem para o Firebase Storage
   const uploadImage = async () => {
     setImageFileUploading(true);
     setImageFileUploadError(null);
-    const storage = getStorage(app); // Obtém a instância de armazenamento do Firebase
-    const fileName = new Date().getTime() + imageFile.name; // Gera um nome de arquivo único
-    const storageRef = ref(storage, fileName); // Cria uma referência de armazenamento para o arquivo
-    const uploadTask = uploadBytesResumable(storageRef, imageFile); // Inicia o upload do arquivo
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + imageFile.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, imageFile);
 
     // Evento para acompanhar o progresso do upload
     uploadTask.on(
       "state_changed",
       (snapshot) => {
         const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100; // Calcula o progresso em porcentagem
-        setImageFileUploadProgress(progress.toFixed(0)); // Atualiza o estado de progresso do upload
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setImageFileUploadProgress(progress.toFixed(0));
       },
       (error) => {
-        // Manipula erros de upload
         setImageFileUploadError(
           "Não foi possível fazer upload da imagem (o arquivo deve ter menos de 2 MB)"
         );
-        setImageFileUploadProgress(null); // Reinicia o progresso do upload para 0
-        setImageFile(null); // Limpa o arquivo de imagem selecionado
-        setImageFileUrl(null); // Limpa a URL da imagem
+        setImageFileUploadProgress(null);
+        setImageFile(null);
+        setImageFileUrl(null);
         setImageFileUploading(false);
       },
       () => {
         // Upload concluído com sucesso
         getDownloadURL(uploadTask.snapshot.ref).then((downloadUrl) => {
-          setImageFileUrl(downloadUrl); // Define a URL da imagem após o upload
-          setImageFileUploadProgress(100); // Define o progresso do upload como 100 ao concluir
-          setFormData({ ...formData, profilePicture: downloadUrl });
+          setImageFileUrl(downloadUrl);
+          setImageFileUploadProgress(100);
           setImageFileUploading(false);
+          setFormState({ ...formState, profilePicture: downloadUrl });
         });
       }
     );
   };
 
+  // Manipulador de evento para alterar dados do formulário
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormState({
+      ...formState,
       [e.target.id]: e.target.value,
     });
   };
 
+  // Função para lidar com o envio do formulário de atualização do usuário
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUpdateUserError(null);
     setUpdateUserSuccess(null);
 
-    if (Object.keys(formData).length === 0) {
+    if (Object.keys(formState).length === 0) {
       setUpdateUserError("Nenhuma alteração foi feita");
       return;
     }
@@ -112,7 +131,7 @@ export default function DashProfile() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formState),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -126,13 +145,33 @@ export default function DashProfile() {
       dispatch(updateFailure(error.message));
       setUpdateUserError(error.message);
     }
-    console.log("submetido");
+  };
+
+  // Função para lidar com a exclusão do usuário
+  const handleDeleteUser = async () => {
+    setShowModal(false);
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        dispatch(deleteUserFailure(data.message));
+      } else {
+        dispatch(deleteUserSuccess(data));
+      }
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
+    }
   };
 
   // Renderização do componente
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
+      {/* Título da página */}
       <h1 className="my-7 text-center font-semibold text-3xl">Perfil</h1>
+      {/* Formulário de atualização do perfil */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* Input de arquivo para selecionar uma nova imagem de perfil */}
         <input
@@ -142,7 +181,7 @@ export default function DashProfile() {
           ref={filePickerRef}
           hidden
         />
-        {/* Div para exibir a imagem de perfil atual */}
+        {/* Preview da imagem de perfil atual ou selecionada */}
         <div
           className="relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full"
           onClick={() => filePickerRef.current.click()}
@@ -189,14 +228,14 @@ export default function DashProfile() {
           type="text"
           id="username"
           placeholder="usuário"
-          defaultValue={currentUser.username}
+          value={formState.username}
           onChange={handleChange}
         />
         <TextInput
           type="email"
           id="email"
           placeholder="email"
-          defaultValue={currentUser.email}
+          value={formState.email}
           onChange={handleChange}
         />
         <TextInput
@@ -212,9 +251,12 @@ export default function DashProfile() {
       </form>
       {/* Opções para deletar a conta ou fazer logout */}
       <div className="text-red-500 flex justify-between mt-5">
-        <span className="cursor-pointer">Deletar Conta</span>
+        <span onClick={() => setShowModal(true)} className="cursor-pointer">
+          Deletar Conta
+        </span>
         <span className="cursor-pointer">Sair</span>
       </div>
+      {/* Exibe mensagens de sucesso e erro */}
       {updateUserSuccess && (
         <Alert color="success" className="mt-5">
           {updateUserSuccess}
@@ -225,6 +267,36 @@ export default function DashProfile() {
           {updateUserError}
         </Alert>
       )}
+      {error && (
+        <Alert color="failure" className="mt-5">
+          {error}
+        </Alert>
+      )}
+      {/* Modal de confirmação para deletar a conta */}
+      <Modal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        popup
+        size="md"
+      >
+        <Modal.Header />
+        <Modal.Body>
+          <div className="text-center">
+            <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
+            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
+              Tem certeza de que deseja excluir sua conta?
+            </h3>
+            <div className="flex justify-center gap-4">
+              <Button color="failure" onClick={handleDeleteUser}>
+                Sim, quero excluir!
+              </Button>
+              <Button color="gray" onClick={() => setShowModal(false)}>
+                Não, cancelar!
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

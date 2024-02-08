@@ -52,7 +52,10 @@ export const signin = async (req, res, next) => {
     }
 
     // Gerar token JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET
+    );
 
     // Responder com o token e os dados do usuário (sem a senha)
     const { password: _, ...userWithoutPassword } = user._doc;
@@ -96,7 +99,10 @@ export const google = async (req, res, next) => {
     }
 
     // Gera um token de autenticação usando o ID do usuário
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET
+    );
 
     // Remove a senha do usuário da resposta
     const { password, ...rest } = user._doc;

@@ -21,10 +21,11 @@ import {
 } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { Link } from "react-router-dom";
 
 export default function DashProfile() {
   // Seleciona os dados do usuário e erros do estado global Redux
-  const { currentUser, error } = useSelector((state) => state.user);
+  const { currentUser, error, loading } = useSelector((state) => state.user);
 
   // Estados para armazenar dados do formulário e estados de upload de imagem
   const [formState, setFormState] = useState({
@@ -262,9 +263,21 @@ export default function DashProfile() {
           onChange={handleChange}
         />
         {/* Botão para enviar o formulário de edição do perfil */}
-        <Button type="submit" color="dark" outline>
-          Alterar
+        <Button
+          type="submit"
+          color="dark"
+          outline
+          disabled={loading || imageFileUploading}
+        >
+          {loading ? "Carregando..." : "Alterar"}
         </Button>
+        {currentUser.isAdmin && (
+          <Link to={"/create-post"}>
+            <Button type="button" color="dark" className="w-full">
+              Crie uma postagem
+            </Button>
+          </Link>
+        )}
       </form>
       {/* Opções para deletar a conta ou fazer logout */}
       <div className="text-red-500 flex justify-between mt-5">

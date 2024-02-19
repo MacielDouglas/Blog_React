@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import DashSidebar from "../components/DashSidebar";
 import DashProfile from "../components/DashProfile";
+import DashPosts from "../components/DashPosts";
 
 export default function Dashboard() {
   // Obter a localização atual da rota
@@ -31,6 +32,9 @@ export default function Dashboard() {
 
       {/* Renderizar o componente de perfil se a aba for "profile" */}
       {tab === "profile" && <DashProfile />}
+
+      {/* posts  */}
+      {tab === "posts" && <DashPosts />}
     </div>
   );
 }

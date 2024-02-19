@@ -36,3 +36,61 @@ export const create = async (req, res, next) => {
     next(error); // Encaminha qualquer erro para o middleware de tratamento de erro
   }
 };
+
+export const getPosts = async (req, res, next) => {
+  try {
+    // Parse dos parâmetros de consulta
+    const startIndex = parseInt(req.query.startIndex) || 0;
+    const limit = parseInt(req.query.limit) || 9;
+    const sortDirection = req.query.order === "asc" ? 1 : -1;
+
+    // Construção da consulta com filtros opcionais
+    const query = {
+      ...(req.query.userId && { userId: req.query.userId }),
+      ...(req.query.category && { category: req.query.category }),
+      ...(req.query.slug && { category: req.query.slug }),
+      ...(req.query.postId && { _id: req.query.postId }),
+      ...(req.query.searchTerm && {
+        $or: [
+          { title: { $regex: req.query.searchTerm, $options: "i" } },
+          { content: { $regex: req.query.searchTerm, $options: "i" } },
+        ],
+      }),
+    };
+
+    // Consulta ao banco de dados
+    const postsQuery = Post.find(query)
+      .sort({ updatedAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit);
+
+    // Contagem total de posts
+    const totalPostsQuery = Post.countDocuments(query);
+
+    // Contagem de posts do último mês
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+    const lastMonthPostsQuery = Post.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+
+    // Execução das consultas em paralelo
+    const [posts, totalPosts, lastMonthPosts] = await Promise.all([
+      postsQuery.exec(),
+      totalPostsQuery.exec(),
+      lastMonthPostsQuery.exec(),
+    ]);
+
+    res.status(200).json({
+      posts,
+      totalPosts,
+      lastMonthPosts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

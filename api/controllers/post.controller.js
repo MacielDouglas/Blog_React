@@ -94,3 +94,24 @@ export const getPosts = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deletePost = async (req, res, next) => {
+  try {
+    // Verifica se o usuário é um administrador ou se é o autor da postagem
+    if (!req.user.isAdmin && req.user.id !== req.params.userId) {
+      return next(
+        errorHandler(403, "Você não tem permissão para excluir esta postagem.")
+      );
+    }
+
+    // Exclui a postagem pelo ID fornecido nos parâmetros da solicitação
+    // await Post.findByIdAndDelete(req.params.postId);
+    await Post.findOneAndDelete(req.params.postId);
+
+    // Retorna uma resposta de sucesso indicando que a postagem foi excluída
+    res.status(200).json("A postagem foi excluída!");
+  } catch (error) {
+    // Passa o erro para o próximo middleware de tratamento de erro
+    next(error);
+  }
+};

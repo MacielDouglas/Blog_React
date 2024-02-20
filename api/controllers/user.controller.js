@@ -109,3 +109,61 @@ export const signout = (req, res, next) => {
     next(error);
   }
 };
+
+export const getUsers = async (req, res, next) => {
+  try {
+    const { isAdmin } = req.user;
+    if (!isAdmin) {
+      return next(
+        errorHandler(403, "Você não tem permissão para ver todos os usuários")
+      );
+    }
+
+    const startIndex = parseInt(req.query.startIndex) || 0;
+    const limit = parseInt(req.query.limit) || 9;
+    const sortDirection = req.query.sortDirection === "asc" ? 1 : -1;
+
+    // Validar entradas
+    if (isNaN(startIndex) || isNaN(limit)) {
+      return next(
+        errorHandler(
+          400,
+          "startIndex e limit devem ser números inteiros válidos."
+        )
+      );
+    }
+
+    // Consultar usuários
+    const users = await User.find()
+      .sort({ createdAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit)
+      .lean();
+
+    // Remover a senha dos usuários
+    const userWithoutPassword = users.map(({ password, ...rest }) => rest);
+
+    // Contagem total de usuários
+    const totalUsers = await User.countDocuments();
+
+    // Contagem de usuários do último mês
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+    const lastMonthUsers = await User.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+
+    // Retornar resposta
+    res.status(200).json({
+      users: userWithoutPassword,
+      totalUsers,
+      lastMonthUsers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

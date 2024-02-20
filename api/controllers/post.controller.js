@@ -115,3 +115,37 @@ export const deletePost = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updatePost = async (req, res, next) => {
+  try {
+    // Verifica se o usuário é um administrador
+    if (!req.user.isAdmin) {
+      return next(
+        errorHandler(
+          403,
+          "Você não tem permissão para atualizar esta postagem."
+        )
+      );
+    }
+
+    // Verifica se a postagem existe
+    const existingPost = await Post.findById(req.params.postId);
+    if (!existingPost) {
+      return next(errorHandler(404, "Postagem não encontrada."));
+    }
+
+    // Atualiza os campos da postagem
+    existingPost.title = req.body.title;
+    existingPost.content = req.body.content;
+    existingPost.category = req.body.category;
+    existingPost.image = req.body.image;
+
+    // Salva a postagem atualizada
+    const updatedPost = await existingPost.save();
+
+    // Retorna a postagem atualizada
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    next(error);
+  }
+};

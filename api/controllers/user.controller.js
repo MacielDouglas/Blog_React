@@ -80,20 +80,18 @@ export const updateUser = async (req, res, next) => {
 
 // Função para excluir um usuário
 export const deleteUser = async (req, res, next) => {
-  const { userId } = req.params;
-  const { id: loggedInUserId } = req.user;
-
-  // Verifica se o usuário autenticado é o mesmo que está sendo excluído
-  if (loggedInUserId !== userId) {
-    return next(
-      errorHandler(403, "Você não tem permissão para excluir este usuário.")
-    );
-  }
-
   try {
-    // Exclui o usuário do banco de dados
+    const { isAdmin } = req.user;
+    const { userId } = req.params;
+
+    if (!isAdmin && userId !== req.user.id) {
+      return next(
+        errorHandler(403, "Você não tem permissão para excluir este usuário.")
+      );
+    }
+
     await User.findByIdAndDelete(userId);
-    res.status(200).json("Usuário deletado com sucesso.");
+    res.status(200).json("Usuário deletado com sucesso!!!");
   } catch (error) {
     next(error);
   }

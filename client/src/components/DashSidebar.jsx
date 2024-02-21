@@ -4,6 +4,7 @@ import {
   HiArrowSmRight,
   HiDocument,
   HiDocumentText,
+  HiOutlineUserGroup,
   HiUser,
 } from "react-icons/hi";
 import { Link, useLocation } from "react-router-dom";
@@ -56,6 +57,7 @@ export default function DashSidebar() {
               Perfil
             </Sidebar.Item>
           </Link>
+          {/* postagens  */}
           {currentUser.isAdmin && (
             <Link to="/dashboard?tab=posts">
               <Sidebar.Item
@@ -64,6 +66,18 @@ export default function DashSidebar() {
                 as="div"
               >
                 Postagens
+              </Sidebar.Item>
+            </Link>
+          )}
+          {/* usuarios  */}
+          {currentUser.isAdmin && (
+            <Link to="/dashboard?tab=users">
+              <Sidebar.Item
+                active={tab === "users"}
+                icon={HiOutlineUserGroup}
+                as="div"
+              >
+                Usuários
               </Sidebar.Item>
             </Link>
           )}

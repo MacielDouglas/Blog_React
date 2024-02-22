@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { useSelector } from "react-redux";
 import { FaCheck, FaTimes } from "react-icons/fa";
-// import { Link } from "react-router-dom";
 
 export default function DashUsers() {
   const { currentUser } = useSelector((state) => state.user);
@@ -29,7 +28,7 @@ export default function DashUsers() {
             }
           } else {
             setError(
-              "Falha ao carregar as postagens. Tente novamente mais tarde."
+              "Falha ao carregar os usuários. Tente novamente mais tarde."
             );
           }
         }
@@ -63,11 +62,6 @@ export default function DashUsers() {
 
   const handleDeleteUser = async () => {
     try {
-      //   const confirmed = window.confirm(
-      //     "Tem certeza de que deseja excluir este usuário?"
-      //   );
-      //   if (!confirmed) return;
-
       const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
         method: "DELETE",
       });
@@ -82,23 +76,6 @@ export default function DashUsers() {
       setError("Falha ao excluir o usuário. Tente novamente mais tarde.");
     }
   };
-
-  //   const handleDeleteUser = async () => {
-  //     try {
-  //       const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
-  //         method: "DELETE",
-  //       });
-  //       const data = await res.json();
-  //       if (res.ok) {
-  //         setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
-  //         setShowModal(false);
-  //       } else {
-  //         console.log(data.message);
-  //       }
-  //     } catch (error) {
-  //       console.log(error.message);
-  //     }
-  //   };
 
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
@@ -118,9 +95,6 @@ export default function DashUsers() {
                   <Table.HeadCell>Email</Table.HeadCell>
                   <Table.HeadCell>Administrador</Table.HeadCell>
                   <Table.HeadCell>Delete</Table.HeadCell>
-                  {/* <Table.HeadCell>
-                    <span>Editar</span>
-                  </Table.HeadCell> */}
                 </Table.Head>
                 {users.map((user) => (
                   <Table.Body className="divide-y" key={user._id}>

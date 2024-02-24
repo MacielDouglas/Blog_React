@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
 import moment from "moment";
 import "moment/dist/locale/pt-br";
+import { FaThumbsUp } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { PropTypes } from "prop-types";
 
-export default function Comment({ comment }) {
+export default function Comment({ comment, onLike }) {
+  const { currentUser } = useSelector((state) => state.user);
   const [user, setUser] = useState({});
   const [loading, setLoading] = useState(true);
+
+  Comment.propTypes = {
+    comment: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      userId: PropTypes.string.isRequired,
+      createdAt: PropTypes.string.isRequired,
+      content: PropTypes.string.isRequired,
+      likes: PropTypes.arrayOf(PropTypes.string).isRequired,
+      numberOfLikes: PropTypes.number.isRequired,
+    }).isRequired,
+    onLike: PropTypes.func.isRequired,
+  };
 
   useEffect(() => {
     const getUser = async () => {
@@ -46,6 +62,25 @@ export default function Comment({ comment }) {
           </span>
         </div>
         <p className="text-gray-500 pb-2">{comment.content}</p>
+        <div className="flex items-center pt-2 text-xs border-t dark:border-gray-700 max-w-fit gap-2">
+          <button
+            type="button"
+            onClick={() => onLike(comment._id)}
+            className={`text-gray-400 hover:text-blue-500 ${
+              currentUser &&
+              comment.likes.includes(currentUser._id) &&
+              "!text-blue-500"
+            }`}
+          >
+            <FaThumbsUp className="text-sm" />
+          </button>
+          <p className="text-gray-500">
+            {comment.numberOfLikes > 0 &&
+              comment.numberOfLikes +
+                " " +
+                (comment.numberOfLikes === 1 ? "like" : "likes")}
+          </p>
+        </div>
       </div>
     </div>
   );

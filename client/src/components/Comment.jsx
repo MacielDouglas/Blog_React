@@ -16,9 +16,11 @@ Comment.propTypes = {
     numberOfLikes: PropTypes.number.isRequired,
   }).isRequired,
   onLike: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 };
 
-export default function Comment({ comment, onLike, onEdit }) {
+export default function Comment({ comment, onLike, onEdit, onDelete }) {
   const { currentUser } = useSelector((state) => state.user);
   const [user, setUser] = useState({});
   const [loading, setLoading] = useState(true);
@@ -135,13 +137,22 @@ export default function Comment({ comment, onLike, onEdit }) {
               </p>
               {currentUser &&
                 (currentUser._id === comment.userId || currentUser.isAdmin) && (
-                  <button
-                    type="button"
-                    onClick={handleEdit}
-                    className="text-gray-400 hover:text-blue-500"
-                  >
-                    Editar
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleEdit}
+                      className="text-gray-400 hover:text-blue-500"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(comment._id)}
+                      className="text-gray-400 hover:text-blue-500"
+                    >
+                      Deletar
+                    </button>
+                  </>
                 )}
             </div>
           </>

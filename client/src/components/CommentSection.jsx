@@ -5,6 +5,9 @@ import { Link, useNavigate } from "react-router-dom";
 import Comment from "./Comment";
 import { PropTypes } from "prop-types";
 
+CommentSection.propTypes = {
+  postId: PropTypes.string.isRequired,
+};
 export default function CommentSection({ postId }) {
   const { currentUser } = useSelector((state) => state.user);
   const [comment, setComment] = useState("");
@@ -12,10 +15,6 @@ export default function CommentSection({ postId }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  CommentSection.propTypes = {
-    postId: PropTypes.string.isRequired,
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,6 +94,14 @@ export default function CommentSection({ postId }) {
     }
   };
 
+  const handleEdit = async (comment, editedContent) => {
+    setComments(
+      comments.map((c) =>
+        c._id === comment._id ? { ...c, content: editedContent } : c
+      )
+    );
+  };
+
   return (
     <div className="max-w-2xl mx-auto w-full p-3">
       {currentUser ? (
@@ -158,7 +165,12 @@ export default function CommentSection({ postId }) {
             </div>
           </div>
           {comments.map((comment) => (
-            <Comment key={comment._id} comment={comment} onLike={handleLike} />
+            <Comment
+              key={comment._id}
+              comment={comment}
+              onLike={handleLike}
+              onEdit={handleEdit}
+            />
           ))}
         </>
       )}

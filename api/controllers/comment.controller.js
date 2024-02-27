@@ -102,3 +102,41 @@ export const deleteComment = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getComments = async (req, res, next) => {
+  try {
+    // Verifica se o usuário é um administrador
+    if (!req.user.isAdmin) {
+      throw new Error(
+        "Você não tem permissão para receber todos os comentários"
+      );
+    }
+
+    // Parâmetros de consulta para paginação e ordenação
+    const startIndex = parseInt(req.query.startIndex) || 0;
+    const limit = parseInt(req.query.limit) || 9;
+    const sortDirection = req.query.sort === "desc" ? -1 : 1;
+
+    // Consulta os comentários com a paginação e ordenação especificadas
+    const comments = await Comment.find()
+      .sort({ createdAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit);
+
+    // Conta o total de comentários
+    const totalComments = await Comment.countDocuments();
+
+    // Calcula o número de comentários do último mês
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const lastMonthComments = await Comment.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+
+    // Retorna os resultados como JSON
+    res.status(200).json({ comments, totalComments, lastMonthComments });
+  } catch (error) {
+    // Passa o erro para o próximo middleware de tratamento de erro
+    next(error);
+  }
+};

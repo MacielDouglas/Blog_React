@@ -45,9 +45,10 @@ export const getPosts = async (req, res, next) => {
     const sortDirection = req.query.order === "asc" ? 1 : -1;
 
     // Construção da consulta com filtros opcionais
-    const query = {
+    let query = {
       ...(req.query.userId && { userId: req.query.userId }),
-      ...(req.query.category && { category: req.query.category }),
+      ...(req.query.category &&
+        req.query.category !== "null" && { category: req.query.category }),
       ...(req.query.slug && { slug: req.query.slug }),
       ...(req.query.postId && { _id: req.query.postId }),
       ...(req.query.searchTerm && {

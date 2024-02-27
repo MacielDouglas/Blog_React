@@ -107,11 +107,7 @@ export default function SignUp() {
               id="password"
               onChange={handleChange}
             />
-            <Button
-              gradientDuoTone="pinkToOrange"
-              type="submit"
-              disabled={loading}
-            >
+            <Button color="dark" type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Spinner size="sm" />

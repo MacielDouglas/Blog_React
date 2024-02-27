@@ -27,7 +27,15 @@ export default function About() {
               ou pode fazer login com uma conta google.
             </p>
             <p>
-              Se quiser entrar em contato comigo, por favor acesse me portfólio.
+              Se quiser entrar em contato comigo, por favor acesse{" "}
+              <a
+                href="https://macield.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:font-semibold"
+              >
+                meu portfólio.
+              </a>
             </p>
             <p>
               Obrigado, <span className="font-bold italic">Maciel D.</span>

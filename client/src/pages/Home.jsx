@@ -25,7 +25,7 @@ export default function Home() {
             Blog
           </span>
         </h1>
-        <p className="text-gray-500 text-xs sm:test-sm">
+        <p className="text-gray-500 text-md sm:test-sm">
           Aqui você encontrará uma variedade de artigos e tutoriais sobre
           tópicos como desenvolvimento web, engenharia de software e linguagens
           de programação.

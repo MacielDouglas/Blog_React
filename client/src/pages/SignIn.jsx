@@ -31,7 +31,7 @@ FormField.propTypes = {
 };
 
 const SubmitButton = ({ loading, children }) => (
-  <Button gradientDuoTone="pinkToOrange" type="submit" disabled={loading}>
+  <Button color="dark" type="submit" disabled={loading}>
     {loading ? (
       <>
         <Spinner size="sm" />
@@ -46,8 +46,6 @@ const SubmitButton = ({ loading, children }) => (
 const SignIn = () => {
   const [formData, setFormData] = useState({});
   const { loading, error: errorMessage } = useSelector((state) => state.user);
-  // const [errorMessage, setErrorMessage] = useState(null);
-  // const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 

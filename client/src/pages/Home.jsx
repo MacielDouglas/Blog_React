@@ -1,19 +1,30 @@
 import { Link } from "react-router-dom";
 import CallToAction from "./../components/CallToAction";
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 import PostCard from "./../components/PostCard";
+import { useQuery } from "@apollo/client";
+import { ALL_POSTS } from "../graphql/queries/post.query.js";
 
 export default function Home() {
-  const [posts, setPosts] = useState([]);
+  const { data } = useQuery(ALL_POSTS);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const res = await fetch("/api/post/getPosts");
-      const data = await res.json();
-      setPosts(data.posts);
-    };
-    fetchPosts();
-  }, []);
+  const posts = data?.allPosts;
+
+  // console.log("Posts", data?.allPosts);
+  // const [posts, setPosts] = useState([]);
+
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     setPosts(data?.allPosts);
+  //     // const {data} = useQuery(ALL_POSTS)
+  //     // const res = await fetch("/api/post/getPosts");
+  //     // const data = await res.json();
+  //     // setPosts(data.posts);
+  //   };
+  //   fetchPosts();
+  // }, []);
+
+  // console.log(posts);
 
   return (
     <div>
@@ -48,7 +59,7 @@ export default function Home() {
             </h2>
             <div className="flex flex-wrap gap-4 justify-center">
               {posts.map((posts) => (
-                <PostCard key={posts._id} post={posts} />
+                <PostCard key={posts.id} post={posts} />
               ))}
             </div>
             <Link

@@ -5,44 +5,21 @@ import { FaThumbsUp } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { PropTypes } from "prop-types";
 import { Button, Textarea } from "flowbite-react";
-
-Comment.propTypes = {
-  comment: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    userId: PropTypes.string.isRequired,
-    createdAt: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    likes: PropTypes.arrayOf(PropTypes.string).isRequired,
-    numberOfLikes: PropTypes.number.isRequired,
-  }).isRequired,
-  onLike: PropTypes.func.isRequired,
-  onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-};
+import { useQuery } from "@apollo/client";
+import { ONE_USER } from "../graphql/queries/user.query";
 
 export default function Comment({ comment, onLike, onEdit, onDelete }) {
   const { currentUser } = useSelector((state) => state.user);
-  const [user, setUser] = useState({});
-  const [loading, setLoading] = useState(true);
+  const { data, loading } = useQuery(ONE_USER, {
+    variables: {
+      userId: comment.userId,
+    },
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
-
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const res = await fetch(`/api/user/${comment.userId}`);
-        const data = await res.json();
-        if (res.ok) {
-          setUser(data);
-        }
-      } catch (error) {
-        console.log(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getUser();
-  }, [comment]);
+  if (loading) return <p>carregando...</p>;
+  const user = data.oneUser;
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -161,3 +138,17 @@ export default function Comment({ comment, onLike, onEdit, onDelete }) {
     </div>
   );
 }
+
+Comment.propTypes = {
+  comment: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    userId: PropTypes.string.isRequired,
+    createdAt: PropTypes.string.isRequired,
+    content: PropTypes.string.isRequired,
+    likes: PropTypes.arrayOf(PropTypes.string).isRequired,
+    numberOfLikes: PropTypes.number.isRequired,
+  }).isRequired,
+  onLike: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+};

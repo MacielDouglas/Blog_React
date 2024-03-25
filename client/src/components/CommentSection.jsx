@@ -5,16 +5,21 @@ import { Link, useNavigate } from "react-router-dom";
 import Comment from "./Comment";
 import { PropTypes } from "prop-types";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { useQuery } from "@apollo/client";
+import { ALL_COMMENTS } from "../graphql/queries/comment.query";
 
-CommentSection.propTypes = {
-  postId: PropTypes.string.isRequired,
-};
 export default function CommentSection({ postId }) {
+  const { data, loading } = useQuery(ALL_COMMENTS, {
+    variables: {
+      postId: postId,
+    },
+  });
   const { currentUser } = useSelector((state) => state.user);
+
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [comments, setComments] = useState([]);
+  // const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const navigate = useNavigate();
@@ -27,7 +32,7 @@ export default function CommentSection({ postId }) {
     }
 
     try {
-      setLoading(true);
+      // setLoading(true);
       const res = await fetch("/api/comment/create", {
         method: "POST",
         headers: {
@@ -39,11 +44,11 @@ export default function CommentSection({ postId }) {
           userId: currentUser._id,
         }),
       });
-      const data = await res.json();
+      // const data = await res.json();
       if (res.ok) {
         setComment("");
         setCommentError(null);
-        setComments([data, ...comments]);
+        // setComments([data, ...comments]);
       }
     } catch (error) {
       setCommentError(
@@ -54,20 +59,20 @@ export default function CommentSection({ postId }) {
     }
   };
 
-  useEffect(() => {
-    const getComments = async () => {
-      try {
-        const res = await fetch(`/api/comment/getPostComments/${postId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setComments(data);
-        }
-      } catch (error) {
-        console.log(error.message);
-      }
-    };
-    getComments();
-  }, [postId]);
+  // useEffect(() => {
+  //   const getComments = async () => {
+  //     try {
+  //       const res = await fetch(`/api/comment/getPostComments/${postId}`);
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         setComments(data);
+  //       }
+  //     } catch (error) {
+  //       console.log(error.message);
+  //     }
+  //   };
+  //   getComments();
+  // }, [postId]);
 
   const handleLike = async (commentId) => {
     try {
@@ -124,6 +129,12 @@ export default function CommentSection({ postId }) {
       console.log(error.message);
     }
   };
+
+  if (loading) {
+    return <p>Sem comentarios</p>;
+  }
+  const comments = data?.allComments;
+  console.log(comments.length);
 
   return (
     <div className="max-w-2xl mx-auto w-full p-3">
@@ -189,7 +200,7 @@ export default function CommentSection({ postId }) {
           </div>
           {comments.map((comment) => (
             <Comment
-              key={comment._id}
+              key={comment.id}
               comment={comment}
               onLike={handleLike}
               onEdit={handleEdit}
@@ -231,3 +242,6 @@ export default function CommentSection({ postId }) {
     </div>
   );
 }
+CommentSection.propTypes = {
+  postId: PropTypes.string.isRequired,
+};

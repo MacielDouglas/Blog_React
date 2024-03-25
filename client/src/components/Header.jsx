@@ -12,6 +12,8 @@ import { AiOutlineSearch } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { signoutSuccess } from "../redux/user/userSlice";
 import { useEffect, useState } from "react";
+import { useMutation } from "@apollo/client";
+import { LOGOUT_USER } from "../graphql/mutation/user.mutation";
 
 export default function Header() {
   const path = useLocation().pathname;
@@ -20,6 +22,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState("");
+  const [logout, { loading, error }] = useMutation(LOGOUT_USER);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -31,17 +34,12 @@ export default function Header() {
 
   const handleSignout = async () => {
     try {
-      const res = await fetch("/api/user/signout", {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        console.log(data.message);
-      } else {
-        dispatch(signoutSuccess());
-      }
+      // Chama a função de logout da sua API
+      await logout();
+      // Dispara a ação de logout bem-sucedido no Redux
+      dispatch(signoutSuccess());
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
     }
   };
 
